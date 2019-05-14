@@ -194,10 +194,29 @@ class NukeOCIONode(tank.platform.Application):
         ocio_path = ocio_path.replace(os.path.sep, "/")
         ocio_path = nuke.filenameFilter(ocio_path)
 
-        nuke.root().knob("colorManagement").setValue("Nuke")
-        nuke.root().knob("OCIO_config").setValue("custom")
-        nuke.root().knob("customOCIOConfigPath").setValue(ocio_path)
-        nuke.root().knob("colorManagement").setValue("OCIO")
+        colorManagementKnob = nuke.root().knob("colorManagement")
+        OCIOconfigKnob = nuke.root().knob("OCIO_config")
+        customOCIOConfigPathKnob = nuke.root().knob("customOCIOConfigPath")
+
+        # if this is a new script, then don't do anything and let the knob defaults set the OCIO knobs
+        if nuke.root().knob("name").value() == '':
+            pass
+        # for an existing script, check the settings and ask the user to change if incorrect
+        elif colorManagementKnob.value() == 'OCIO' and \
+          OCIOconfigKnob.value() == 'custom' and \
+          customOCIOConfigPathKnob.value() == ocio_path:
+            pass
+        else:
+            anwser = nuke.ask('WARNING: Your OCIO settings do not match the correct settings for this project<p> \
+                Nuke is currently using the %s OCIO config located in:<br><i>%s</i><p>\
+                It is supposed to use the custom OCIO config for this project located in:<br><i>%s</i><p>\
+                Do you want me to correct the OCIO settings?<br>Please be aware that changing the OCIO config \
+                is going to reset all ocio nodes.' % (OCIOconfigKnob.value(), customOCIOConfigPathKnob.value(), ocio_path))
+            if anwser:
+                colorManagementKnob.setValue("Nuke")
+                OCIOconfigKnob.setValue("custom")
+                customOCIOConfigPathKnob.setValue(ocio_path)
+                colorManagementKnob.setValue("OCIO")
 
     def _setOCIOKnobDefaults(self):
 
