@@ -198,9 +198,16 @@ class NukeOCIONode(tank.platform.Application):
         OCIOconfigKnob = nuke.root().knob("OCIO_config")
         customOCIOConfigPathKnob = nuke.root().knob("customOCIOConfigPath")
 
-        # if this is a new script, then don't do anything and let the knob defaults set the OCIO knobs
+        # If this is a new script, then set the knobs. This may seem redundant given that we also
+        # set knob defaults, but nuke seems to need both to correctly load the
+        # viewer processes.
         if nuke.root().knob("name").value() == '':
-            pass
+            # Set the color management to Nuke first. Setting it from 'Nuke'
+            # to 'OCIO' seems to be what initializes the viewer processes.
+            colorManagementKnob.setValue("Nuke")
+            OCIOconfigKnob.setValue("custom")
+            customOCIOConfigPathKnob.setValue(ocio_path)
+            colorManagementKnob.setValue("OCIO")
         # for an existing script, check the settings and ask the user to change if incorrect
         elif colorManagementKnob.value() == 'OCIO' and \
           OCIOconfigKnob.value() == 'custom' and \
@@ -219,6 +226,11 @@ class NukeOCIONode(tank.platform.Application):
                 colorManagementKnob.setValue("OCIO")
 
     def _setOCIOKnobDefaults(self):
+
+        # Knob defaults by themselves dont seem to work correctly, they dont
+        # intialize the viewer processes so we're also hitting this with
+        # a big stick in the _setOCIOSettingsOnRootNode function and
+        # essentially setting these defaults twice. Yay Nuke!
 
         ocio_path = os.getenv("OCIO_CONFIG")
         ocio_path = ocio_path.replace(os.path.sep, "/")
