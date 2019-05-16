@@ -205,6 +205,7 @@ class NukeOCIONode(tank.platform.Application):
         if nuke.root().knob("name").value() == '':
             # Set the color management to Nuke first. Setting it from 'Nuke'
             # to 'OCIO' seems to be what initializes the viewer processes.
+            self.log_debug("New script detected, setting Root node OCIO settings.")
             colorManagementKnob.setValue("Nuke")
             OCIOconfigKnob.setValue("custom")
             customOCIOConfigPathKnob.setValue(ocio_path)
@@ -215,16 +216,20 @@ class NukeOCIONode(tank.platform.Application):
           customOCIOConfigPathKnob.value() == ocio_path:
             pass
         else:
+            self.log_debug("Preseting user with dialog...")
             anwser = nuke.ask('WARNING: Your OCIO settings do not match the correct settings for this project<p> \
                 Nuke is currently using the %s OCIO config located in:<br><i>%s</i><p>\
                 It is supposed to use the custom OCIO config for this project located in:<br><i>%s</i><p>\
                 Do you want me to correct the OCIO settings?<br>Please be aware that changing the OCIO config \
                 is going to reset all ocio nodes.' % (OCIOconfigKnob.value(), customOCIOConfigPathKnob.value(), ocio_path))
             if anwser:
+                self.log_debug("User accepted changes, setting Root node OCIO settings.")
                 colorManagementKnob.setValue("Nuke")
                 OCIOconfigKnob.setValue("custom")
                 customOCIOConfigPathKnob.setValue(ocio_path)
                 colorManagementKnob.setValue("OCIO")
+            else:
+                self.log_debug("User refused, keeping current Root node OCIO settings.")
 
     def _setOCIOKnobDefaults(self):
 
@@ -237,6 +242,7 @@ class NukeOCIONode(tank.platform.Application):
         ocio_path = ocio_path.replace(os.path.sep, "/")
         ocio_path = nuke.filenameFilter(ocio_path)
 
+        self.log_debug("Setting knob defaults for Root node OCIO settings.")
         nuke.knobDefault("Root.colorManagement", "OCIO")
         nuke.knobDefault("Root.OCIO_config", "custom")
         nuke.knobDefault("Root.customOCIOConfigPath", ocio_path)
