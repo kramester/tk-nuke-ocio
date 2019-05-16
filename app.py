@@ -31,7 +31,7 @@ class NukeOCIONode(tank.platform.Application):
         if nuke.env['gui']:
             # first deal with nuke root settings: we don't need a context for this
 
-            self.log_debug("Loading tk-nuke-ocio app.")
+            self.log_debug("Loading tk-nuke-ocio app for a gui session.")
 
             self._setOCIOConfigContext()
             self._setOCIOKnobDefaults()  # if I don't do this and do a File/New in Nuke, the new instance of nuke does not set the OCIO settings on the root node.
@@ -42,7 +42,8 @@ class NukeOCIONode(tank.platform.Application):
             self._add_callbacks()
 
         else:
-            pass
+            self.log_debug("Loading tk-nuke-ocio app for a non-gui session.")
+            self._setOCIOConfigContext()
 
     def destroy_app(self):
         """
